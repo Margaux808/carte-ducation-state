@@ -1,0 +1,29 @@
+#title {
+    text-align: center;
+    margin-top: 20px;
+}
+
+#description {
+    text-align: center;
+    margin-top: 10px;
+}
+
+#choropleth {
+    width: 90%;
+    margin: 0 auto;
+    height: 500px;
+}
+
+#legend {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    visibility: hidden;
+}

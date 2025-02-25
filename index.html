@@ -1,37 +1,29 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choroplèthe - Education aux États-Unis</title>
-    <!-- Lien vers le fichier CSS -->
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="title">
-        <h1>Carte Choroplèthe de l'Éducation aux États-Unis</h1>
+<html>
+  <head>
+    <title>FCC: D3 Choropleth Map</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-scale-chromatic@3.0.0/dist/d3-scale-chromatic.min.js"></script>
+  </head>
+  <body>
+    <div id="main">
+      <h1 id="title">United States Educational Attainment</h1>
+      <div id="description">
+        Percentage of adults age 25 and older with a bachelor's degree or higher
+        (2010-2014)
+      </div>
+      <svg width="960" height="600"></svg>
+      <div id="source">
+        Source:
+        <a
+          href="https://www.ers.usda.gov/data-products/county-level-data-sets/download-data.aspx"
+          >USDA Economic Research Service</a
+        >
+      </div>
     </div>
-    
-    <div id="description">
-        <p>La carte ci-dessous montre la distribution de l'éducation selon les comtés américains.</p>
-    </div>
-    
-    <div id="choropleth">
-        <!-- Le choroplèthe sera généré ici avec D3.js -->
-    </div>
-
-    <div id="legend">
-        <!-- La légende sera générée ici -->
-    </div>
-
-    <div id="tooltip">
-        <!-- Les info-bulles seront affichées ici -->
-    </div>
-
-    <!-- Lien vers D3.js -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Lien vers le fichier JavaScript -->
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
 

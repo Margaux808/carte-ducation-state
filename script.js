@@ -169,3 +169,4 @@ function ready(us, education) {
     .attr('class', 'states')
     .attr('d', path);
 }
+

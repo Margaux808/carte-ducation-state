@@ -1,79 +1,171 @@
-// Charger les données
-Promise.all([
-    d3.json('https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/for_user_education.json'),
-    d3.json('https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json')
-]).then(([educationData, countiesData]) => {
-    
-    // Créer la projection et le chemin pour dessiner la carte
-    const projection = d3.geoAlbersUsa();
-    const path = d3.geoPath().projection(projection);
-    
-    // Créer l'échelle de couleurs
-    const colorScale = d3.scaleQuantize()
-        .domain([0, 100]) // Intervalle des données d'éducation
-        .range(["#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#3182bd", "#08519c"]);
-    
-    // Créer l'élément SVG pour dessiner la carte
-    const svg = d3.select('#choropleth')
-        .append('svg')
-        .attr('width', '100%')
-        .attr('height', '100%');
+/* global d3, topojson */
+/* eslint-disable max-len */
 
-    // Créer les comtés
-    svg.append('g')
-        .selectAll('path')
-        .data(topojson.feature(countiesData, countiesData.objects.counties).features)
-        .enter().append('path')
-        .attr('class', 'county')
-        .attr('d', path)
-        .attr('fill', d => {
-            // Trouver les données d'éducation pour chaque comté
-            const countyData = educationData.find(c => c.fips === d.id);
-            return countyData ? colorScale(countyData.bachelorsOrHigher) : "#ccc";
+// eslint-disable-next-line no-unused-vars
+const projectName = 'choropleth';
+
+// coded by @paycoguy & @ChristianPaul (github)
+
+// Define body
+var body = d3.select('body');
+
+var svg = d3.select('svg');
+
+// Define the div for the tooltip
+var tooltip = body
+  .append('div')
+  .attr('class', 'tooltip')
+  .attr('id', 'tooltip')
+  .style('opacity', 0);
+
+var path = d3.geoPath();
+
+var x = d3.scaleLinear().domain([2.6, 75.1]).rangeRound([600, 860]);
+
+var color = d3
+  .scaleThreshold()
+  .domain(d3.range(2.6, 75.1, (75.1 - 2.6) / 8))
+  .range(d3.schemeGreens[9]);
+
+var g = svg
+  .append('g')
+  .attr('class', 'key')
+  .attr('id', 'legend')
+  .attr('transform', 'translate(0,40)');
+
+g.selectAll('rect')
+  .data(
+    color.range().map(function (d) {
+      d = color.invertExtent(d);
+      if (d[0] === null) {
+        d[0] = x.domain()[0];
+      }
+      if (d[1] === null) {
+        d[1] = x.domain()[1];
+      }
+      return d;
+    })
+  )
+  .enter()
+  .append('rect')
+  .attr('height', 8)
+  .attr('x', function (d) {
+    return x(d[0]);
+  })
+  .attr('width', function (d) {
+    return d[0] && d[1] ? x(d[1]) - x(d[0]) : x(null);
+  })
+  .attr('fill', function (d) {
+    return color(d[0]);
+  });
+
+g.append('text')
+  .attr('class', 'caption')
+  .attr('x', x.range()[0])
+  .attr('y', -6)
+  .attr('fill', '#000')
+  .attr('text-anchor', 'start')
+  .attr('font-weight', 'bold');
+
+g.call(
+  d3
+    .axisBottom(x)
+    .tickSize(13)
+    .tickFormat(function (x) {
+      return Math.round(x) + '%';
+    })
+    .tickValues(color.domain())
+)
+  .select('.domain')
+  .remove();
+
+const EDUCATION_FILE =
+  'https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/for_user_education.json';
+const COUNTY_FILE =
+  'https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json';
+
+Promise.all([d3.json(COUNTY_FILE), d3.json(EDUCATION_FILE)])
+  .then(data => ready(data[0], data[1]))
+  .catch(err => console.log(err));
+
+function ready(us, education) {
+  svg
+    .append('g')
+    .attr('class', 'counties')
+    .selectAll('path')
+    .data(topojson.feature(us, us.objects.counties).features)
+    .enter()
+    .append('path')
+    .attr('class', 'county')
+    .attr('data-fips', function (d) {
+      return d.id;
+    })
+    .attr('data-education', function (d) {
+      var result = education.filter(function (obj) {
+        return obj.fips === d.id;
+      });
+      if (result[0]) {
+        return result[0].bachelorsOrHigher;
+      }
+      // could not find a matching fips id in the data
+      console.log('could find data for: ', d.id);
+      return 0;
+    })
+    .attr('fill', function (d) {
+      var result = education.filter(function (obj) {
+        return obj.fips === d.id;
+      });
+      if (result[0]) {
+        return color(result[0].bachelorsOrHigher);
+      }
+      // could not find a matching fips id in the data
+      return color(0);
+    })
+    .attr('d', path)
+    .on('mouseover', function (event, d) {
+      tooltip.style('opacity', 0.9);
+      tooltip
+        .html(function () {
+          var result = education.filter(function (obj) {
+            return obj.fips === d.id;
+          });
+          if (result[0]) {
+            return (
+              result[0]['area_name'] +
+              ', ' +
+              result[0]['state'] +
+              ': ' +
+              result[0].bachelorsOrHigher +
+              '%'
+            );
+          }
+          // could not find a matching fips id in the data
+          return 0;
         })
-        .attr('data-fips', d => d.id)
-        .attr('data-education', d => {
-            const countyData = educationData.find(c => c.fips === d.id);
-            return countyData ? countyData.bachelorsOrHigher : 0;
+        .attr('data-education', function () {
+          var result = education.filter(function (obj) {
+            return obj.fips === d.id;
+          });
+          if (result[0]) {
+            return result[0].bachelorsOrHigher;
+          }
+          // could not find a matching fips id in the data
+          return 0;
         })
-        .on('mouseover', function(event, d) {
-            const countyData = educationData.find(c => c.fips === d.id);
-            const tooltip = d3.select('#tooltip');
-            tooltip.transition().duration(200).style('visibility', 'visible');
-            tooltip.html(`${countyData ? countyData.area_name : 'Inconnu'}, ${countyData ? countyData.state : 'Inconnu'}<br>${countyData ? countyData.bachelorsOrHigher : 'Données manquantes'}% ayant un diplôme universitaire`)
-                .attr('data-education', countyData ? countyData.bachelorsOrHigher : 0)
-                .style('top', `${event.pageY + 5}px`)
-                .style('left', `${event.pageX + 5}px`);
-        })
-        .on('mouseout', function() {
-            d3.select('#tooltip').transition().duration(200).style('visibility', 'hidden');
-        });
+        .style('left', event.pageX + 10 + 'px')
+        .style('top', event.pageY - 28 + 'px');
+    })
+    .on('mouseout', function () {
+      tooltip.style('opacity', 0);
+    });
 
-    // Ajouter la légende
-    const legend = d3.select('#legend')
-        .append('svg')
-        .attr('width', '300px')
-        .attr('height', '50px');
-
-    const legendScale = d3.scaleLinear()
-        .domain([0, 100])
-        .range([0, 300]);
-
-    const legendAxis = d3.axisBottom(legendScale)
-        .ticks(5)
-        .tickFormat(d => `${d}%`);
-
-    legend.append('g')
-        .selectAll('rect')
-        .data(colorScale.range())
-        .enter().append('rect')
-        .attr('x', (d, i) => i * 60)
-        .attr('y', 10)
-        .attr('width', 60)
-        .attr('height', 20)
-        .style('fill', d => d);
-
-    legend.append('g')
-        .attr('transform', 'translate(0, 30)')
-        .call(legendAxis);
-});
+  svg
+    .append('path')
+    .datum(
+      topojson.mesh(us, us.objects.states, function (a, b) {
+        return a !== b;
+      })
+    )
+    .attr('class', 'states')
+    .attr('d', path);
+}
